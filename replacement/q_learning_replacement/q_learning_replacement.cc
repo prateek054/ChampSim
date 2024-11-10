@@ -1,14 +1,16 @@
 // q_learning_replacement.cc
 
-#include "cache.h"
+#include "cache.h"  // Make sure this is included for CacheBlock
 #include <map>
 #include <utility>
 #include <cmath>
 #include <cstdlib>
 #include <iostream>
 
-#define DEBUG true
-#define DEBUG_PRINT(x) do { if (DEBUG) std::cout << x << std::endl; } while (0)
+#define DEBUG true // Set to true to enable debug messages
+
+// Variadic macro for printing debug messages
+#define DEBUG_PRINT(...) do { if (DEBUG) std::cout << __VA_ARGS__ << std::endl; } while (0)
 
 class Q_LearningReplacement {
 public:
@@ -30,7 +32,6 @@ private:
 
 Q_LearningReplacement::Q_LearningReplacement(int num_lines) : cache_size(num_lines) {}
 
-// Function to compute the current state based on cache occupancy
 int Q_LearningReplacement::get_state(CacheBlock *cache, int num_lines) {
     int occupancy = 0;
     for (int i = 0; i < num_lines; i++) {
@@ -38,18 +39,15 @@ int Q_LearningReplacement::get_state(CacheBlock *cache, int num_lines) {
             occupancy++;
     }
     DEBUG_PRINT("Current State (Occupancy): " << occupancy);
-    return occupancy; // Example state based on cache occupancy
+    return occupancy;
 }
 
-// Function to choose an action based on epsilon-greedy strategy
 int Q_LearningReplacement::choose_action(int state, int num_lines) {
     if ((float)rand() / RAND_MAX < epsilon) {
-        // Exploration: choose a random action
         int random_action = rand() % num_lines;
         DEBUG_PRINT("Choosing Random Action: " << random_action);
         return random_action;
     } else {
-        // Exploitation: choose the action with max Q-value
         int best_action = 0;
         float max_q_value = -INFINITY;
         for (int action = 0; action < num_lines; action++) {
@@ -64,7 +62,6 @@ int Q_LearningReplacement::choose_action(int state, int num_lines) {
     }
 }
 
-// Function to update Q-table based on the reward received
 void Q_LearningReplacement::update_q_table(int state, int action, float reward, int next_state) {
     float old_q_value = Q_table[{state, action}];
     float max_next_q_value = -INFINITY;
@@ -78,27 +75,20 @@ void Q_LearningReplacement::update_q_table(int state, int action, float reward, 
     DEBUG_PRINT("New Q-value: " << Q_table[{state, action}]);
 }
 
-// Main eviction function using Q-learning
 int Q_LearningReplacement::find_victim(CacheBlock *cache, int num_lines) {
-    // Get the current state
     int state = get_state(cache, num_lines);
-
-    // Choose an action based on the current state
     int action = choose_action(state, num_lines);
 
-    // Reward function (hit = +1, miss = -1)
     float reward = cache[action].valid ? -1.0 : 1.0;
     DEBUG_PRINT("Action: " << action << ", Reward: " << reward);
 
-    // Update Q-table with the new state and reward
     int next_state = get_state(cache, num_lines);
     update_q_table(state, action, reward, next_state);
 
     DEBUG_PRINT("Selected Victim Cache Line Index: " << action);
-    return action; // Return the chosen victim cache line index
+    return action;
 }
 
-// Register this replacement policy with ChampSim
 extern "C" {
     Q_LearningReplacement* make_replacement_policy(int num_lines) {
         return new Q_LearningReplacement(num_lines);
