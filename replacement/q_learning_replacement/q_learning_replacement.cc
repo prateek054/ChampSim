@@ -1,96 +1,93 @@
-// q_learning_replacement.cc
-
-#include "cache.h"  // Make sure this is included for CacheBlock
+#include <algorithm>
+#include <cassert>
 #include <map>
-#include <utility>
-#include <cmath>
+#include <vector>
 #include <cstdlib>
+#include <cmath>
 #include <iostream>
 
-#define DEBUG true // Set to true to enable debug messages
+#include "cache.h"  // Ensure this is the file where BLOCK is defined
 
-// Variadic macro for printing debug messages
-#define DEBUG_PRINT(...) do { if (DEBUG) std::cout << __VA_ARGS__ << std::endl; } while (0)
-
-class Q_LearningReplacement {
-public:
-    Q_LearningReplacement(int num_lines);
-    int find_victim(CacheBlock *cache, int num_lines);
-    void update_q_table(int state, int action, float reward, int next_state);
-
-private:
-    int get_state(CacheBlock *cache, int num_lines);
-    int choose_action(int state, int num_lines);
-
-    float alpha = 0.1;    // Learning rate
-    float gamma = 0.9;    // Discount factor
-    float epsilon = 0.1;  // Exploration rate
-    int cache_size;
-
-    std::map<std::pair<int, int>, float> Q_table; // Q-table: (state, action) -> Q-value
-};
-
-Q_LearningReplacement::Q_LearningReplacement(int num_lines) : cache_size(num_lines) {}
-
-int Q_LearningReplacement::get_state(CacheBlock *cache, int num_lines) {
-    int occupancy = 0;
-    for (int i = 0; i < num_lines; i++) {
-        if (cache[i].valid)
-            occupancy++;
-    }
-    DEBUG_PRINT("Current State (Occupancy): " << occupancy);
-    return occupancy;
+namespace
+{
+    // Define Q-learning structures and parameters
+    std::map<std::pair<uint32_t, uint32_t>, float> Q_table;
+    float alpha = 0.1;     // Learning rate
+    float gama = 0.9;     // Discount factor
+    float epsilon = 0.1;   // Exploration rate
 }
 
-int Q_LearningReplacement::choose_action(int state, int num_lines) {
-    if ((float)rand() / RAND_MAX < epsilon) {
-        int random_action = rand() % num_lines;
-        DEBUG_PRINT("Choosing Random Action: " << random_action);
-        return random_action;
+// Initialize replacement policy (Q-learning setup)
+void CACHE::initialize_replacement() {
+    std::cout << "Initializing Q-learning Replacement Policy..." << std::endl;
+}
+
+// Find victim cache line using Q-learning
+uint32_t CACHE::find_victim(uint32_t triggering_cpu, uint64_t instr_id, uint32_t set, const BLOCK* current_set, uint64_t ip, uint64_t full_addr, uint32_t type) {
+    // Step 1: Determine the current state of the cache set
+    uint32_t state = 0;
+    for (uint32_t i = 0; i < NUM_WAY; ++i) {
+        if (current_set[i].valid)
+            ++state; // For example, state can represent cache occupancy
+    }
+    std::cout << "Current state (occupancy): " << state << std::endl;
+
+    // Step 2: Choose an action (cache way to evict) using epsilon-greedy strategy
+    uint32_t action;
+    if (static_cast<float>(rand()) / RAND_MAX < epsilon) {
+        // Exploration: choose a random action
+        action = rand() % NUM_WAY;
+        std::cout << "Choosing Random Action: " << action << std::endl;
     } else {
-        int best_action = 0;
+        // Exploitation: choose the action with the maximum Q-value
         float max_q_value = -INFINITY;
-        for (int action = 0; action < num_lines; action++) {
-            auto q_value = Q_table[{state, action}];
+        action = 0;
+        for (uint32_t i = 0; i < NUM_WAY; ++i) {
+            float q_value = Q_table[{state, i}];
             if (q_value > max_q_value) {
                 max_q_value = q_value;
-                best_action = action;
+                action = i;
             }
         }
-        DEBUG_PRINT("Choosing Best Action: " << best_action << " with Q-value: " << max_q_value);
-        return best_action;
+        std::cout << "Choosing Best Action: " << action << " with Q-value: " << Q_table[{state, action}] << std::endl;
     }
-}
 
-void Q_LearningReplacement::update_q_table(int state, int action, float reward, int next_state) {
-    float old_q_value = Q_table[{state, action}];
-    float max_next_q_value = -INFINITY;
-    for (int a = 0; a < cache_size; a++) {
-        max_next_q_value = std::max(max_next_q_value, Q_table[{next_state, a}]);
-    }
-    Q_table[{state, action}] = old_q_value + alpha * (reward + gamma * max_next_q_value - old_q_value);
-
-    DEBUG_PRINT("Updating Q-table for State: " << state << ", Action: " << action);
-    DEBUG_PRINT("Old Q-value: " << old_q_value << ", Reward: " << reward << ", Max Next Q-value: " << max_next_q_value);
-    DEBUG_PRINT("New Q-value: " << Q_table[{state, action}]);
-}
-
-int Q_LearningReplacement::find_victim(CacheBlock *cache, int num_lines) {
-    int state = get_state(cache, num_lines);
-    int action = choose_action(state, num_lines);
-
-    float reward = cache[action].valid ? -1.0 : 1.0;
-    DEBUG_PRINT("Action: " << action << ", Reward: " << reward);
-
-    int next_state = get_state(cache, num_lines);
-    update_q_table(state, action, reward, next_state);
-
-    DEBUG_PRINT("Selected Victim Cache Line Index: " << action);
+    // Return the chosen cache line to evict
+    std::cout << "Chosen victim way: " << action << " for set: " << set << std::endl;
     return action;
 }
 
-extern "C" {
-    Q_LearningReplacement* make_replacement_policy(int num_lines) {
-        return new Q_LearningReplacement(num_lines);
+// Update replacement state using Q-learning
+void CACHE::update_replacement_state(uint32_t triggering_cpu, uint32_t set, uint32_t way, uint64_t full_addr, uint64_t ip, uint64_t victim_addr, uint32_t type,
+                                     uint8_t hit) {
+    // Step 1: Get the current state
+    uint32_t state = 0;
+    for (uint32_t i = 0; i < NUM_WAY; ++i) {
+        if (this->block[set * NUM_WAY + i].valid)
+            ++state; // Occupancy-based state representation
     }
+    std::cout << "Current state (occupancy): " << state << std::endl;
+
+    // Step 2: Calculate the reward
+    float reward = hit ? 1.0 : -1.0;
+    std::cout << "Reward: " << reward << std::endl;
+
+    // Step 3: Get the next state after the action
+    uint32_t next_state = 0;
+    for (uint32_t i = 0; i < NUM_WAY; ++i) {
+        if (this->block[set * NUM_WAY + i].valid)
+            ++next_state;
+    }
+    std::cout << "Next state (occupancy): " << next_state << std::endl;
+
+    // Step 4: Update the Q-value for the (state, action) pair
+    float max_next_q_value = -INFINITY;
+    for (uint32_t i = 0; i < NUM_WAY; ++i) {
+        max_next_q_value = std::max(max_next_q_value, Q_table[{next_state, i}]);
+    }
+    float& current_q_value = Q_table[{state, way}];
+    current_q_value = current_q_value + alpha * (reward + gama * max_next_q_value - current_q_value);
+
+    std::cout << "Updated Q-value for (state: " << state << ", action: " << way << "): " << current_q_value << std::endl;
 }
+void CACHE::replacement_final_stats() {}
