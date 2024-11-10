@@ -1,11 +1,14 @@
-#include "dqn_replacement.h"
-#include <iostream>
 #include <algorithm>
+#include <cassert>
+#include <map>
+#include <vector>
 
-// Use this to store the last access times for each cache
-namespace
-{
-    std::map<CACHE*, std::vector<uint64_t>> last_used_cycles;
+#include "cache.h"
+#include "dqn_agent.h"  // Include DQN Agent header
+
+namespace {
+    // Map to track access frequencies for each cache line in each cache instance
+    std::map<CACHE*, std::vector<uint64_t>> access_frequencies;
 }
 
 // Constructor to initialize the DQN agent and other members
@@ -19,20 +22,29 @@ DQNReplacement::~DQNReplacement() {
     delete dqn_agent;  // Clean up the DQN agent
 }
 
-// Override the `initialize_replacement` method from CACHE
+// Call the original initialize_replacement method from CACHE
 void CACHE::initialize_replacement() {
-    // Initialize the replacement strategy for DQN
-    ::last_used_cycles[this] = std::vector<uint64_t>(NUM_SET * NUM_WAY, 0);  // Initialize last used cycles
-    // DQN agent initialization can happen here if necessary (it was already done in the constructor of DQNReplacement)
+    // Initialize the frequency counter array for each cache line
+    ::access_frequencies[this] = std::vector<uint64_t>(NUM_SET * NUM_WAY, 0);
 }
 
-// Override the `find_victim` method from CACHE
+// Find victim cache line using DQN logic, calling the original find_victim method from CACHE
 uint32_t CACHE::find_victim(uint32_t triggering_cpu, uint64_t instr_id, uint32_t set, const BLOCK* current_set, uint64_t ip, uint64_t full_addr, uint32_t type) {
-    // Build the state vector based on cache set and other features
-    std::vector<double> state = build_state(set, current_set, ip, full_addr, type);
+    // Calculate the range of cache lines within the set
+    auto begin = std::next(std::begin(::access_frequencies[this]), set * NUM_WAY);
+    auto end = std::next(begin, NUM_WAY);
 
-    // Use the DQN agent to decide which cache line to evict
-    int victim_way = dqn_agent->act(state);  // The agent chooses a victim
+    // DQN logic: Use the DQN agent to decide which cache line to evict
+    std::vector<double> state = build_state(set, current_set, ip, full_addr, type);  // Build the state vector
+    int victim_way = dqn_agent->act(state);  // The agent chooses a victim based on the state
+
+    // Find the cache line with the lowest access frequency (fallback to LRU-like behavior if needed)
+    if (victim_way < 0 || victim_way >= NUM_WAY) {
+        auto victim = std::min_element(begin, end);  // Fallback to using frequency if DQN doesn't choose a valid victim
+        assert(begin <= victim);
+        assert(victim < end);
+        victim_way = static_cast<uint32_t>(std::distance(begin, victim));  // cast protected by prior asserts
+    }
 
     std::cout << "DQN selected victim at way: " << victim_way << std::endl;
     return victim_way;  // Return the victim cache line (way)
@@ -40,36 +52,31 @@ uint32_t CACHE::find_victim(uint32_t triggering_cpu, uint64_t instr_id, uint32_t
 
 // Update the replacement state after an access
 void CACHE::update_replacement_state(uint32_t triggering_cpu, uint32_t set, uint32_t way, uint64_t full_addr, uint64_t ip, uint64_t victim_addr, uint32_t type, uint8_t hit) {
-    // Mark the way as being used on the current cycle
+    // Increment the frequency counter for the accessed cache line, using DQN-based logic for updates
     if (!hit || access_type{type} != access_type::WRITE) {  // Skip this for writeback hits
-        ::last_used_cycles[this].at(set * NUM_WAY + way) = current_cycle;
+        ::access_frequencies[this].at(set * NUM_WAY + way)++;  // Update the frequency counter
     }
 
-    // Calculate the reward based on hit or miss
-    double reward = hit ? 1.0 : -1.0;
-
-    // Update the DQN agent with the state-action pair and reward
-    std::vector<double> next_state = build_state(set, current_set, ip, full_addr, type);
-    dqn_agent->remember(last_state, way, reward, next_state);  // Store experience
-
-    // Perform experience replay to learn from the past experiences
-    dqn_agent->replay();
+    // The DQN agent learns from the cache access
+    double reward = hit ? 1.0 : -1.0;  // Reward based on hit or miss
+    std::vector<double> next_state = build_state(set, current_set, ip, full_addr, type);  // Build the next state
+    dqn_agent->remember(last_state, way, reward, next_state);  // Store the experience
+    dqn_agent->replay();  // Perform experience replay to improve decision-making
 }
 
 // Final statistics after simulation
 void CACHE::replacement_final_stats() {
-    // Output final statistics for DQN (if needed)
     std::cout << "Final statistics for DQN replacement:" << std::endl;
-    // Example: Print some performance metrics (e.g., miss rates)
+    // Example: Print performance metrics such as the number of evictions or misses
 }
 
 // Helper method to build the state vector for the DQN agent
 std::vector<double> CACHE::build_state(uint32_t set, const BLOCK* current_set, uint64_t ip, uint64_t full_addr, uint32_t type) {
     std::vector<double> state = {
         static_cast<double>(set),                      // Cache set index
-        static_cast<double>(current_set->get_last_access_time()),  // Last access time
+        static_cast<double>(current_set->get_last_access_time()),  // Last access time of the current block
         static_cast<double>(ip % NUM_WAY),             // Some derived feature from the IP (can be modified)
-        static_cast<double>(full_addr),                // Full address
+        static_cast<double>(full_addr),                // Full address of the accessed cache line
         static_cast<double>(type)                      // Access type (read/write)
     };
 
