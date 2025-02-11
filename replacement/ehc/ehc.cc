@@ -26,7 +26,7 @@ long ehc::find_victim(uint32_t triggering_cpu, uint64_t instr_id, long set, cons
     float min_expected_hits = std::numeric_limits<float>::max(); // Initialize with a large value
 
     for (long way = 0; way < NUM_WAY; way++) {
-        uint64_t block_addr = static_cast<uint64_t>(current_set[way].address.value());  // Get block address
+        uint64_t block_addr = current_set[way].address.to<uint64_t>();  // Get block address
 
         // Calculate Expected Future Hits (EFH) counter
         float expected_further_hits = further_expected_hits[set][way];
@@ -45,7 +45,7 @@ long ehc::find_victim(uint32_t triggering_cpu, uint64_t instr_id, long set, cons
               << ", Expected Further Hits: " << min_expected_hits << std::endl;
 
     // Get victim block's address before eviction
-    uint64_t victim_addr = static_cast<uint64_t>(current_set[way].address.value());
+    uint64_t victim_addr = current_set[way].address.to<uint64_t>();
 
     uint8_t victim_current_hits = current_hit_counters[set][victim];
 
