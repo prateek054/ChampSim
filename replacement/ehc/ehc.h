@@ -25,6 +25,10 @@ class ehc : public champsim::modules::replacement
   };
 
   std::vector<HHTEntry> hit_history_table;  // HHT now stores per-block data
+  std::vector<std::vector<uint8_t>> current_hit_counters;   // Track hits per block
+  std::vector<std::vector<float>> further_expected_hits;    // Stores expected hits per block
+
+
 
 public:
   explicit ehc(CACHE* cache);
