@@ -45,7 +45,7 @@ long ehc::find_victim(uint32_t triggering_cpu, uint64_t instr_id, long set, cons
               << ", Expected Further Hits: " << min_expected_hits << std::endl;
 
     // Get victim block's address before eviction
-    uint64_t victim_addr = current_set[way].address.to<uint64_t>();
+    uint64_t victim_addr = current_set[victim].address.to<uint64_t>();
 
     uint8_t victim_current_hits = current_hit_counters[set][victim];
 
