@@ -14,6 +14,8 @@ constexpr long HISTORY_LENGTH = 4;  // Number of past hit counts stored
 
 class ehc : public champsim::modules::replacement
 {
+
+private: 
   std::vector<std::array<uint32_t, HISTORY_LENGTH>> hit_counters; // Per-block hit counters
   std::vector<uint64_t> last_used_cycles;
   uint64_t cycle = 0;
@@ -28,6 +30,7 @@ class ehc : public champsim::modules::replacement
   std::vector<std::vector<uint8_t>> current_hit_counters;   // Track hits per block
   std::vector<std::vector<float>> further_expected_hits;    // Stores expected hits per block
 
+  int find_hht_entry(uint64_t tag);  // <---- Add this declaration
 
 
 public:

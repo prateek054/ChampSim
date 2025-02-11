@@ -26,7 +26,7 @@ long ehc::find_victim(uint32_t triggering_cpu, uint64_t instr_id, long set, cons
     float min_expected_hits = std::numeric_limits<float>::max(); // Initialize with a large value
 
     for (long way = 0; way < NUM_WAY; way++) {
-        uint64_t block_addr = current_set[way].address.address;  // Get block address
+        uint64_t block_addr = static_cast<uint64_t>(current_set[way].address.value());  // Get block address
 
         // Calculate Expected Future Hits (EFH) counter
         float expected_further_hits = further_expected_hits[set][way];
@@ -45,7 +45,8 @@ long ehc::find_victim(uint32_t triggering_cpu, uint64_t instr_id, long set, cons
               << ", Expected Further Hits: " << min_expected_hits << std::endl;
 
     // Get victim block's address before eviction
-    uint64_t victim_addr = current_set[victim].address.address;
+    uint64_t victim_addr = static_cast<uint64_t>(current_set[way].address.value());
+
     uint8_t victim_current_hits = current_hit_counters[set][victim];
 
     std::cout << "[EHC] Selected Victim -> Set: " << set << ", Way: " << victim 
@@ -54,12 +55,12 @@ long ehc::find_victim(uint32_t triggering_cpu, uint64_t instr_id, long set, cons
               << ", Current Hits: " << std::dec << static_cast<int>(victim_current_hits) << std::endl;
 
     // Update Hit History Table (HHT)
-    int hht_index = this->find_hht_entry(victim_addr);
+    int hht_index = find_hht_entry(victim_addr);
     if (hht_index != -1) {
             std::rotate(hit_history_table[hht_index].hit_count_queue.rbegin(),
                         hit_history_table[hht_index].hit_count_queue.rbegin() + 1,
                         hit_history_table[hht_index].hit_count_queue.rend());
-            hit_history_table[hht_index].hit_count_queue[0] = current_hit_counters[set][way];
+            hit_history_table[hht_index].hit_count_queue[0] = current_hit_counters[set][victim];
     } 
      current_hit_counters[set][victim] = 0;
      further_expected_hits[set][victim] = 0;
@@ -96,7 +97,7 @@ void ehc::replacement_cache_fill(uint32_t triggering_cpu, long set, long way, ui
     std::cout << "[EHC] Cache fill at Set " << set << ", Way " << way << " with Addr: " << std::hex << full_addr << std::dec << std::endl;
     current_hit_counters[set][way] = 0; // Reset hit counter for new block
 
-    int hht_index = this->find_hht_entry(full_addr);
+    int hht_index = find_hht_entry(full_addr);
 
     // If entry exists in HHT, update its hit count queue
     if (hht_index != -1) {
