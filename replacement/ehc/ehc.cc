@@ -31,18 +31,12 @@ long ehc::find_victim(uint32_t triggering_cpu, uint64_t instr_id, long set, cons
         // Calculate Expected Future Hits (EFH) counter
         float expected_further_hits = further_expected_hits[set][way];
 
-        std::cout << "[EHC] Set " << set << " | Way " << way << " | Addr: " << std::hex << block_addr 
-                  << " | Expected Further Hits: " << expected_further_hits << std::dec << std::endl;
-
         // Select the way with the minimum expected further hits as the victim
         if (expected_further_hits < min_expected_hits) {
             min_expected_hits = expected_further_hits;
             victim = way;
         }
     }
-
-    std::cout << "[EHC] Selected Victim -> Set: " << set << ", Way: " << victim 
-              << ", Expected Further Hits: " << min_expected_hits << std::endl;
 
     // Get victim block's address before eviction
     uint64_t victim_addr = current_set[victim].address.to<uint64_t>();
@@ -62,6 +56,30 @@ long ehc::find_victim(uint32_t triggering_cpu, uint64_t instr_id, long set, cons
                         hit_history_table[hht_index].hit_count_queue.rend());
             hit_history_table[hht_index].hit_count_queue[0] = current_hit_counters[set][victim];
     } 
+    if (hht_index != -1) {
+        // Print HHT entry details
+        HHTEntry& hht_entry = hit_history_table[hht_index];
+
+        std::cout << "[EHC] HHT Entry -> Index: " << hht_index
+                  << ", Valid: " << hht_entry.valid
+                  << ", Tag: " << std::hex << hht_entry.tag
+                  << ", Hit Count Queue: { ";
+
+        for (int count : hht_entry.hit_count_queue) {
+            std::cout << static_cast<int>(count) << " ";
+        }
+
+        std::cout << "}" << std::dec << std::endl;
+
+        // Rotate the hit count queue (move all elements right)
+        std::rotate(hht_entry.hit_count_queue.rbegin(),
+                    hht_entry.hit_count_queue.rbegin() + 1,
+                    hht_entry.hit_count_queue.rend());
+
+        // Update the most recent hit count
+        hht_entry.hit_count_queue[0] = current_hit_counters[set][victim];
+    } 
+
      current_hit_counters[set][victim] = 0;
      further_expected_hits[set][victim] = 0;
 
@@ -80,7 +98,9 @@ void ehc::update_replacement_state(uint32_t triggering_cpu, long set, long way, 
         if (further_expected_hits[set][way] > 0) {
             further_expected_hits[set][way]--;
         }
-        std::cout << "[EHC] Hit on Set " << set << ", Way " << way << " (New Hit Count: " << current_hit_counters[set][way] << ")" << std::endl;
+        std::cout << "[EHC] Hit on Set " << set << ", Way " 
+                  << way << " (New Hit Count: " << current_hit_counters[set][way] 
+                  << "Expect further hits " << expected_further_hits << ")" << std::endl;
     } else {
 
         // do nothhing
