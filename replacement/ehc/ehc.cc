@@ -100,7 +100,7 @@ void ehc::update_replacement_state(uint32_t triggering_cpu, long set, long way, 
         }
         std::cout << "[EHC] Hit on Set " << set << ", Way " 
                   << way << " (New Hit Count: " << current_hit_counters[set][way] 
-                  << "Expect further hits " << expected_further_hits << ")" << std::endl;
+                  << "Expect further hits " << further_expected_hits << ")" << std::endl;
     } else {
 
         // do nothhing
