@@ -129,15 +129,37 @@ void ehc::replacement_cache_fill(uint32_t triggering_cpu, long set, long way, ch
                     hit_history_table[hht_index].hit_count_queue.rbegin() + 1,
                     hit_history_table[hht_index].hit_count_queue.rend());
         
-        // Compute the expected hit count as the average of the last 4 values
+        // Compute the expected hit count as the average of non-zero values
         float avg_hit_count = 0;
+        int non_zero_count = 0; // Count of non-zero elements
+
         for (float count : hit_history_table[hht_index].hit_count_queue) {
-            avg_hit_count += count;
+            if (count > 0) { // Ignore zeros
+                avg_hit_count += count;
+                non_zero_count++;
+            }
         }
-        avg_hit_count /= hit_history_table[hht_index].hit_count_queue.size();
+
+        // Avoid division by zero
+        if (non_zero_count > 0) {
+            avg_hit_count /= non_zero_count;
+        } else {
+            avg_hit_count = 1; // Default value if no non-zero counts exist
+        }
 
         // Update the expected hit counter for this set/way
         further_expected_hits[set][way] = avg_hit_count;
+
+        std::cout << "[EHC-LLC] Updated Expected HHT Entry -> Index: " << hht_index
+                  << ", Valid: " << hht_entry.valid
+                  << ", Tag: " << std::hex << hht_entry.tag
+                  << ", Hit Count Queue: { ";
+
+        for (int count : hht_entry.hit_count_queue) {
+            std::cout << static_cast<int>(count) << " ";
+        }
+
+        std::cout << "}" << std::dec << std::endl;
 
         std::cout << "[EHC-LLC] Updated Expected Hit Counter: " << avg_hit_count << " for Set " << set << ", Way " << way << std::endl;
 
