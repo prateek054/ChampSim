@@ -115,7 +115,7 @@ void ehc::update_replacement_state(uint32_t triggering_cpu, long set, long way, 
 // Handle cache fills (new block insertions)
 //void ehc::replacement_cache_fill(uint32_t triggering_cpu, long set, long way, uint64_t full_addr, uint64_t ip, uint64_t victim_addr,
   //                               uint32_t type) 
-void lru::replacement_cache_fill(uint32_t triggering_cpu, long set, long way, champsim::address full_addr, champsim::address ip, 
+void ehc::replacement_cache_fill(uint32_t triggering_cpu, long set, long way, champsim::address full_addr, champsim::address ip, 
                                  champsim::address victim_addr, access_type type)
 {
     std::cout << "[EHC] Cache fill at Set " << set << ", Way " << way << " with Addr: " << std::hex << full_addr << std::dec << std::endl;
