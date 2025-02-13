@@ -25,8 +25,8 @@ long lru::find_victim(uint32_t triggering_cpu, uint64_t instr_id, long set, cons
     assert(victim < end);
 
     long victim_way = std::distance(begin, victim);
-    fmt::print("[LRU] find_victim: CPU {} | Instr {} | Set {} | Victim Way {} | Addr: {:x} | Access Type: {}\n", 
-               triggering_cpu, instr_id, set, victim_way, full_addr, static_cast<int>(type));
+    fmt::print("[LRU] find_victim: CPU {} | Instr {} | Set {} | Victim Way {} |  Access Type: {}\n", 
+               triggering_cpu, instr_id, set, victim_way, static_cast<int>(type));
 
     return victim_way;
 }
@@ -37,8 +37,8 @@ void lru::replacement_cache_fill(uint32_t triggering_cpu, long set, long way, ch
     // Mark the way as being used on the current cycle
     last_used_cycles.at((std::size_t)(set * NUM_WAY + way)) = cycle++;
     
-    fmt::print("[LRU] replacement_cache_fill: CPU {} | Set {} | Way {} | Addr: {:x} | Victim Addr: {:x} | Access Type: {}\n",
-               triggering_cpu, set, way, full_addr, victim_addr, static_cast<int>(type));
+    fmt::print("[LRU] replacement_cache_fill: CPU {} | Set {} | Way {}  | Access Type: {}\n",
+               triggering_cpu, set, way, static_cast<int>(type));
 }
 
 void lru::update_replacement_state(uint32_t triggering_cpu, long set, long way, champsim::address full_addr, champsim::address ip,
@@ -49,6 +49,6 @@ void lru::update_replacement_state(uint32_t triggering_cpu, long set, long way, 
         last_used_cycles.at((std::size_t)(set * NUM_WAY + way)) = cycle++;
     }
 
-    fmt::print("[LRU] update_replacement_state: CPU {} | Set {} | Way {} | Addr: {:x} | Hit: {} | Access Type: {}\n",
-               triggering_cpu, set, way, full_addr, hit, static_cast<int>(type));
+    fmt::print("[LRU] update_replacement_state: CPU {} | Set {} | Way {}  | Hit: {} | Access Type: {}\n",
+               triggering_cpu, set, way, hit, static_cast<int>(type));
 }
