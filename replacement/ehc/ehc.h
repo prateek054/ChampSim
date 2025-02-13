@@ -22,7 +22,7 @@ private:
 
   struct HHTEntry {
       bool valid = false;
-      champsim::address tag = 0;
+      champsim::address tag{};  
       std::array<uint8_t, HISTORY_LENGTH> hit_count_queue = {0, 0, 0, 0}; // FIFO queue of past hit counts
   };
 
