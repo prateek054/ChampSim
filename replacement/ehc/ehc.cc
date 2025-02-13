@@ -4,7 +4,7 @@
 #include <iostream>
 
 // Constructor: Initialize EHC structures with correct HHT size
-ehc::ehc(CACHE* cache) : champsim::modules::replacement(cache)
+ehc::ehc(CACHE* cache) : replacement(cache)
 {
     long NUM_WAY_LOCAL = cache->NUM_WAY;
     long NUM_SET_LOCAL = cache->NUM_SET;
@@ -89,7 +89,7 @@ long ehc::find_victim(uint32_t triggering_cpu, uint64_t instr_id, long set, cons
 
 // Update replacement state (called on cache accesses)
 void ehc::update_replacement_state(uint32_t triggering_cpu, long set, long way, uint64_t full_addr, uint64_t ip, uint64_t victim_addr,
-                                   uint32_t type, uint8_t hit) 
+                                   uint32_t type, uint8_t hit)
 {
     if (hit) {
         if (current_hit_counters[set][way] < 7)  // Max 3-bit counter
@@ -103,7 +103,9 @@ void ehc::update_replacement_state(uint32_t triggering_cpu, long set, long way, 
                   << "Expect further hits " << further_expected_hits[set][way] << ")" << std::endl;
     } else {
 
+        std::cout << "[EHC] not hit in replacement state" << std::endl;
         // do nothhing
+       // replacement_cache_fill(triggering_cpu, set, way, full_addr, ip, victim_addr, type);
     }
 
     // Update last used cycle
@@ -111,8 +113,10 @@ void ehc::update_replacement_state(uint32_t triggering_cpu, long set, long way, 
 }
 
 // Handle cache fills (new block insertions)
-void ehc::replacement_cache_fill(uint32_t triggering_cpu, long set, long way, uint64_t full_addr, uint64_t ip, uint64_t victim_addr,
-                                 uint32_t type) 
+//void ehc::replacement_cache_fill(uint32_t triggering_cpu, long set, long way, uint64_t full_addr, uint64_t ip, uint64_t victim_addr,
+  //                               uint32_t type) 
+void lru::replacement_cache_fill(uint32_t triggering_cpu, long set, long way, champsim::address full_addr, champsim::address ip, 
+                                 champsim::address victim_addr, access_type type)
 {
     std::cout << "[EHC] Cache fill at Set " << set << ", Way " << way << " with Addr: " << std::hex << full_addr << std::dec << std::endl;
     current_hit_counters[set][way] = 0; // Reset hit counter for new block
@@ -152,9 +156,9 @@ void ehc::replacement_cache_fill(uint32_t triggering_cpu, long set, long way, ui
 }
 
 // Final replacement statistics (optional logging)
-void ehc::replacement_final_stats() {
-    std::cout << "[EHC] Final Statistics: Simulation Complete." << std::endl;
-}
+//void ehc::replacement_final_stats() {
+  //  std::cout << "[EHC] Final Statistics: Simulation Complete." << std::endl;
+//}
 
 // Find HHT entry based on tag (search entire HHT, since it's block-based now)
 int ehc::find_hht_entry(uint64_t tag) {
