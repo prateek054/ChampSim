@@ -150,6 +150,9 @@ void ehc::replacement_cache_fill(uint32_t triggering_cpu, long set, long way, ch
         // Update the expected hit counter for this set/way
         further_expected_hits[set][way] = avg_hit_count;
 
+        // Print HHT entry details
+        HHTEntry& hht_entry = hit_history_table[hht_index];
+
         std::cout << "[EHC-LLC] Updated Expected HHT Entry -> Index: " << hht_index
                   << ", Valid: " << hht_entry.valid
                   << ", Tag: " << std::hex << hht_entry.tag
