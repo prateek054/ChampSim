@@ -19,14 +19,14 @@ ehc::ehc(CACHE* cache) : replacement(cache)
 }
 
 // Find a victim block based on Expected Hit Count (EHC) policy
-long ehc::find_victim(uint32_t triggering_cpu, uint64_t instr_id, long set, const champsim::cache_block* current_set, 
-                      uint64_t ip, uint64_t full_addr, uint32_t type) 
+long ehc::find_victim(uint32_t triggering_cpu, uint64_t instr_id, long set, const champsim::cache_block* current_set, champsim::address ip,
+                   champsim::address full_addr, access_type type)
 {
     long victim = 0;
     float min_expected_hits = std::numeric_limits<float>::max(); // Initialize with a large value
 
     for (long way = 0; way < NUM_WAY; way++) {
-        uint64_t block_addr = current_set[way].address.to<uint64_t>();  // Get block address
+        champsim::address block_addr = current_set[way].address;  // Get block address
 
         // Calculate Expected Future Hits (EFH) counter
         float expected_further_hits = further_expected_hits[set][way];
@@ -39,7 +39,7 @@ long ehc::find_victim(uint32_t triggering_cpu, uint64_t instr_id, long set, cons
     }
 
     // Get victim block's address before eviction
-    uint64_t victim_addr = current_set[victim].address.to<uint64_t>();
+    champsim::address victim_addr = current_set[victim].address;
 
     uint8_t victim_current_hits = current_hit_counters[set][victim];
 
@@ -88,8 +88,8 @@ long ehc::find_victim(uint32_t triggering_cpu, uint64_t instr_id, long set, cons
 
 
 // Update replacement state (called on cache accesses)
-void ehc::update_replacement_state(uint32_t triggering_cpu, long set, long way, uint64_t full_addr, uint64_t ip, uint64_t victim_addr,
-                                   uint32_t type, uint8_t hit)
+void ehc::update_replacement_state(uint32_t triggering_cpu, long set, long way, champsim::address full_addr, champsim::address ip, champsim::address victim_addr,
+                                access_type type, uint8_t hit)
 {
     if (hit) {
         if (current_hit_counters[set][way] < 7)  // Max 3-bit counter
@@ -161,10 +161,25 @@ void ehc::replacement_cache_fill(uint32_t triggering_cpu, long set, long way, ch
 //}
 
 // Find HHT entry based on tag (search entire HHT, since it's block-based now)
-int ehc::find_hht_entry(uint64_t tag) {
+/*int ehc::find_hht_entry(uint64_t tag) {
     for (int i = 0; i < HHT_ENTRIES; i++) {
         if (hit_history_table[i].valid && hit_history_table[i].tag == tag)
             return i;
     }
     return -1;
+}*/
+
+int ehc::find_hht_entry(champsim::address full_addr) 
+{
+    //uint64_t tag = full_addr >> LOG2_BLOCK_SIZE; // Extract tag from full address
+
+    // Search for an existing entry in the HHT
+    for (int i = 0; i < HHT_ENTRIES; i++) {
+        if (hit_history_table[i].valid && hit_history_table[i].tag == full_addr) {
+            return i; // Return index if entry is found
+        }
+    }
+
+    return -1; // Return -1 if not found
 }
+

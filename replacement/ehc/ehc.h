@@ -22,7 +22,7 @@ private:
 
   struct HHTEntry {
       bool valid = false;
-      uint64_t tag = 0;
+      champsim::address tag = 0;
       std::array<uint8_t, HISTORY_LENGTH> hit_count_queue = {0, 0, 0, 0}; // FIFO queue of past hit counts
   };
 
@@ -30,21 +30,19 @@ private:
   std::vector<std::vector<uint8_t>> current_hit_counters;   // Track hits per block
   std::vector<std::vector<float>> further_expected_hits;    // Stores expected hits per block
 
-  int find_hht_entry(uint64_t tag);  // <---- Add this declaration
+  int find_hht_entry(champsim::address full_addr);  // <---- Add this declaration
 
 
 public:
   explicit ehc(CACHE* cache);
   ehc(CACHE* cache, long sets, long ways);
 
-  long find_victim(uint32_t triggering_cpu, uint64_t instr_id, long set, const champsim::cache_block* current_set, 
-                   uint64_t ip, uint64_t full_addr, uint32_t type);
-
-  void update_replacement_state(uint32_t triggering_cpu, long set, long way, uint64_t full_addr, uint64_t ip, uint64_t victim_addr,
-                                uint32_t type, uint8_t hit);
-
+  long find_victim(uint32_t triggering_cpu, uint64_t instr_id, long set, const champsim::cache_block* current_set, champsim::address ip,
+                   champsim::address full_addr, access_type type);
   void replacement_cache_fill(uint32_t triggering_cpu, long set, long way, champsim::address full_addr, champsim::address ip, champsim::address victim_addr,
                               access_type type);
+  void update_replacement_state(uint32_t triggering_cpu, long set, long way, champsim::address full_addr, champsim::address ip, champsim::address victim_addr,
+                                access_type type, uint8_t hit);
 };
 
 #endif // REPLACEMENT_EHC_H
