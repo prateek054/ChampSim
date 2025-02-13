@@ -201,15 +201,17 @@ bool CACHE::handle_fill(const mshr_type& fill_mshr)
     writeback_packet.pf_metadata = way->pf_metadata;
     writeback_packet.response_requested = false;
 
-    if constexpr (true) {
-      fmt::print("[{}] {} evict address: {:#x} v_address: {:#x} prefetch_metadata: {}\n", NAME, __func__, writeback_packet.address, writeback_packet.v_address,
-                 fill_mshr.data_promise->pf_metadata);
-    }
 
     auto success = lower_level->add_wq(writeback_packet);
-    if (!success) {
-      return false;
+    if (success) {
+        fmt::print("[DEBUG] Successfully added writeback packet to lower level queue.\n");
+    } else {
+        fmt::print("[DEBUG] Failed to add writeback packet (Queue Full or Error).\n");
+        return false;
     }
+
+
+
   }
 
   champsim::address evicting_address{};
