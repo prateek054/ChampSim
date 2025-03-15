@@ -15,7 +15,7 @@ ehc::ehc(CACHE* cache) : replacement(cache)
     last_used_cycles.resize(TOTAL_BLOCKS, 0);
     hit_history_table.resize(TOTAL_BLOCKS);  // Allocate HHT for all blocks
 
-    std::cout << "[EHC-LLC] Initialized with " << TOTAL_BLOCKS << " HHT entries." << std::endl;
+   // std::cout << "[EHC-LLC] Initialized with " << TOTAL_BLOCKS << " HHT entries." << std::endl;
 }
 
 // Find a victim block based on Expected Hit Count (EHC) policy
@@ -43,11 +43,11 @@ long ehc::find_victim(uint32_t triggering_cpu, uint64_t instr_id, long set, cons
 
     uint8_t victim_current_hits = current_hit_counters[set][victim];
 
-    std::cout << "[EHC-LLC] Selected Victim -> Set: " << set << ", Way: " << victim 
+   /* std::cout << "[EHC-LLC] Selected Victim -> Set: " << set << ", Way: " << victim 
               << ", Expected Further Hits: " << min_expected_hits 
               << ", Victim Addr: " << std::hex << victim_addr 
               << ", Current Hits: " << std::dec << static_cast<int>(victim_current_hits) << std::endl;
-
+    */
     // Update Hit History Table (HHT)
     int hht_index = find_hht_entry(victim_addr);
     if (hht_index != -1) {
@@ -60,21 +60,25 @@ long ehc::find_victim(uint32_t triggering_cpu, uint64_t instr_id, long set, cons
         // Print HHT entry details
         HHTEntry& hht_entry = hit_history_table[hht_index];
 
-        std::cout << "[EHC-LLC] HHT Entry -> Index: " << hht_index
+       /* std::cout << "[EHC-LLC] HHT Entry -> Index: " << hht_index
                   << ", Valid: " << hht_entry.valid
                   << ", Tag: " << std::hex << hht_entry.tag
                   << ", Hit Count Queue: { ";
+                  
 
         for (int count : hht_entry.hit_count_queue) {
             std::cout << static_cast<int>(count) << " ";
         }
 
         std::cout << "}" << std::dec << std::endl;
+        */
 
         // Rotate the hit count queue (move all elements right)
         std::rotate(hht_entry.hit_count_queue.rbegin(),
                     hht_entry.hit_count_queue.rbegin() + 1,
                     hht_entry.hit_count_queue.rend());
+
+                    
 
         // Update the most recent hit count
         hht_entry.hit_count_queue[0] = current_hit_counters[set][victim];
@@ -98,12 +102,14 @@ void ehc::update_replacement_state(uint32_t triggering_cpu, long set, long way, 
         if (further_expected_hits[set][way] > 0) {
             further_expected_hits[set][way]--;
         }
-        std::cout << "[EHC-LLC] Hit on Set " << set << ", Way " 
+       /* std::cout << "[EHC-LLC] Hit on Set " << set << ", Way " 
                   << way << " (New Hit Count: " << current_hit_counters[set][way] 
                   << "Expect further hits " << further_expected_hits[set][way] << ")" << std::endl;
-    } else {
+    
+                  */
+         } else {
 
-        std::cout << "[EHC-LLC] not hit in replacement state" << std::endl;
+       // std::cout << "[EHC-LLC] not hit in replacement state" << std::endl;
         // do nothhing
        // replacement_cache_fill(triggering_cpu, set, way, full_addr, ip, victim_addr, type);
     }
@@ -118,7 +124,7 @@ void ehc::update_replacement_state(uint32_t triggering_cpu, long set, long way, 
 void ehc::replacement_cache_fill(uint32_t triggering_cpu, long set, long way, champsim::address full_addr, champsim::address ip, 
                                  champsim::address victim_addr, access_type type)
 {
-    std::cout << "[EHC-LLC] Cache fill at Set " << set << ", Way " << way << " with Addr: " << std::hex << full_addr << std::dec << std::endl;
+    //std::cout << "[EHC-LLC] Cache fill at Set " << set << ", Way " << way << " with Addr: " << std::hex << full_addr << std::dec << std::endl;
     current_hit_counters[set][way] = 0; // Reset hit counter for new block
 
     int hht_index = find_hht_entry(full_addr);
@@ -153,7 +159,7 @@ void ehc::replacement_cache_fill(uint32_t triggering_cpu, long set, long way, ch
         // Print HHT entry details
         HHTEntry& hht_entry = hit_history_table[hht_index];
 
-        std::cout << "[EHC-LLC] Updated Expected HHT Entry -> Index: " << hht_index
+       /* std::cout << "[EHC-LLC] Updated Expected HHT Entry -> Index: " << hht_index
                   << ", Valid: " << hht_entry.valid
                   << ", Tag: " << std::hex << hht_entry.tag
                   << ", Hit Count Queue: { ";
@@ -165,7 +171,7 @@ void ehc::replacement_cache_fill(uint32_t triggering_cpu, long set, long way, ch
         std::cout << "}" << std::dec << std::endl;
 
         std::cout << "[EHC-LLC] Updated Expected Hit Counter: " << avg_hit_count << " for Set " << set << ", Way " << way << std::endl;
-
+        */
     } else {
         // Insert new entry into HHT (replace least recently used entry)
         int replace_index = static_cast<int>(std::distance(hit_history_table.begin(),
