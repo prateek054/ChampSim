@@ -24,6 +24,7 @@ long ehc::find_victim(uint32_t triggering_cpu, uint64_t instr_id, long set, cons
 {
     long victim = 0;
     float min_expected_hits = std::numeric_limits<float>::max(); // Initialize with a large value
+    uint64_t lru_cycle = std::numeric_limits<uint64_t>::max(); // Store least recently used cycle
 
     for (long way = 0; way < NUM_WAY; way++) {
         champsim::address block_addr = current_set[way].address;  // Get block address
@@ -35,6 +36,14 @@ long ehc::find_victim(uint32_t triggering_cpu, uint64_t instr_id, long set, cons
         if (expected_further_hits < min_expected_hits) {
             min_expected_hits = expected_further_hits;
             victim = way;
+            lru_cycle = last_used_cycles[set * NUM_WAY + way]; // Update LRU cycle
+        }
+        // If there is a tie, choose the Least Recently Used (LRU) block
+        else if (expected_further_hits == min_expected_hits) {
+            if (last_used_cycles[set * NUM_WAY + way] < lru_cycle) {
+                victim = way;
+                lru_cycle = last_used_cycles[set * NUM_WAY + way]; // Update LRU cycle
+            }
         }
     }
 
@@ -115,7 +124,8 @@ void ehc::update_replacement_state(uint32_t triggering_cpu, long set, long way, 
     }
 
     // Update last used cycle
-    last_used_cycles[set * NUM_WAY + way] = cycle;
+    if (hit && access_type{type} != access_type::WRITE) // Skip this for writeback hits
+    last_used_cycles.at((std::size_t)(set * NUM_WAY + way)) = cycle++;
 }
 
 // Handle cache fills (new block insertions)
@@ -126,6 +136,9 @@ void ehc::replacement_cache_fill(uint32_t triggering_cpu, long set, long way, ch
 {
     //std::cout << "[EHC-LLC] Cache fill at Set " << set << ", Way " << way << " with Addr: " << std::hex << full_addr << std::dec << std::endl;
     current_hit_counters[set][way] = 0; // Reset hit counter for new block
+
+    // Mark the way as being used on the current cycle
+    last_used_cycles.at((std::size_t)(set * NUM_WAY + way)) = cycle++;
 
     int hht_index = find_hht_entry(full_addr);
 
