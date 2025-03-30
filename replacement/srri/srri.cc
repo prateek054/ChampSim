@@ -6,13 +6,14 @@
 
 // srri::srri(CACHE* cache) : replacement(cache)
 srri::srri(CACHE* cache)
-    : replacement(cache),
-      rri_table(NUM_SET, std::vector<RRIEntry>(NUM_WAY)),
-      global_cycle(0)
+    : replacement(cache)
 {
     long NUM_WAY_LOCAL = cache->NUM_WAY;
     long NUM_SET_LOCAL = cache->NUM_SET;
     long TOTAL_BLOCKS = NUM_SET * NUM_WAY;  // Correct HHT size
+
+    rri_table.resize(NUM_SET_LOCAL, std::vector<uint8_t>(NUM_WAY_LOCAL, 0));
+    global_cycle.resize(TOTAL_BLOCKS, 0);
 
     constexpr long HISTORY_LENGTH = 4;  // Number of past RRIs stored
     std::cout << "[SRRI-LLC] Initialized with " << TOTAL_BLOCKS << " RRI entries." << std::endl;
