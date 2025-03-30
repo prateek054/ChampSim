@@ -1,5 +1,5 @@
-#ifndef REPLACEMENT_EHC_H
-#define REPLACEMENT_EHC_H
+#ifndef REPLACEMENT_SRRI_H
+#define REPLACEMENT_SRRI_H
 
 #include <vector>
 #include <array>
@@ -12,7 +12,7 @@ constexpr long HHT_ENTRIES = NUM_SET * NUM_WAY;  // Total cache blocks
 
 constexpr long HISTORY_LENGTH = 4;  // Number of past hit counts stored
 
-class ehc : public champsim::modules::replacement
+class srri : public champsim::modules::replacement
 {
 
 private: 
@@ -29,8 +29,8 @@ private:
     float predict_rri(const std::array<uint64_t, HISTORY_LENGTH>& history) const;
 
 public:
-  explicit ehc(CACHE* cache);
-  ehc(CACHE* cache, long sets, long ways);
+  explicit srri(CACHE* cache);
+  srri(CACHE* cache, long sets, long ways);
 
   long find_victim(uint32_t triggering_cpu, uint64_t instr_id, long set, const champsim::cache_block* current_set, champsim::address ip,
                    champsim::address full_addr, access_type type);
@@ -40,4 +40,4 @@ public:
                                 access_type type, uint8_t hit);
 };
 
-#endif // REPLACEMENT_EHC_H
+#endif // REPLACEMENT_SRRI_H
