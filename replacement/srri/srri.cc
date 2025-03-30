@@ -64,5 +64,3 @@ float predict_rri(const std::array<uint64_t, HISTORY_LENGTH>& history) const {
         }
     
 }
-
-#endif // REPLACEMENT_EHC_H
