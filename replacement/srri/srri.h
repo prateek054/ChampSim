@@ -26,7 +26,7 @@ private:
 
    std::vector<std::vector<RRIEntry>> rri_table;  // Per-set RRI entries
    uint64_t global_cycle = 0;
-    float predict_rri(const std::array<uint64_t, HISTORY_LENGTH>& history) const;
+   float predict_rri(const std::array<uint64_t, HISTORY_LENGTH>& history);
 
 public:
   explicit srri(CACHE* cache);

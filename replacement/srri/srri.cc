@@ -4,7 +4,11 @@
 #include <iostream>
 
 
-srri::srri(CACHE* cache) : replacement(cache)
+// srri::srri(CACHE* cache) : replacement(cache)
+srri::srri(CACHE* cache)
+    : replacement(cache),
+      rri_table(NUM_SET, std::vector<RRIEntry>(NUM_WAY)),
+      global_cycle(0)
 {
     long NUM_WAY_LOCAL = cache->NUM_WAY;
     long NUM_SET_LOCAL = cache->NUM_SET;
@@ -14,7 +18,7 @@ srri::srri(CACHE* cache) : replacement(cache)
     std::cout << "[SRRI-LLC] Initialized with " << TOTAL_BLOCKS << " RRI entries." << std::endl;
 }
 
-float predict_rri(const std::array<uint64_t, HISTORY_LENGTH>& history) const {
+float predict_rri(const std::array<uint64_t, HISTORY_LENGTH>& history) {
         uint64_t sum = 0;
         int count = 0;
         for (auto rri : history) {
