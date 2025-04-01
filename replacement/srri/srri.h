@@ -20,13 +20,15 @@ private:
   struct RRIEntry {
         bool valid = false;
         champsim::address tag{};
-        std::array<uint64_t, HISTORY_LENGTH> rri_history = {0};
+       // std::array<uint64_t, HISTORY_LENGTH> rri_history = {0};
+      // std::array<std::array<uint64_t, 10>, 4> rri_history = {{{0}}};
+       std::vector<std::vector<uint64_t>> rri_history;
         uint64_t last_access_cycle = 0;
     };
 
    std::vector<std::vector<RRIEntry>> rri_table;  // Per-set RRI entries
    uint64_t global_cycle = 0;
-   float predict_rri(const std::array<uint64_t, HISTORY_LENGTH>& history) const;
+   float predict_rri(const std::vector<std::vector<uint64_t>>& rri_history) const;
 
 public:
   explicit srri(CACHE* cache);
