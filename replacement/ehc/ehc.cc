@@ -15,7 +15,7 @@ ehc::ehc(CACHE* cache) : replacement(cache)
     last_used_cycles.resize(TOTAL_BLOCKS, 0);
     hit_history_table.resize(TOTAL_BLOCKS);  // Allocate HHT for all blocks
 
-   // std::cout << "[EHC-LLC] Initialized with " << TOTAL_BLOCKS << " HHT entries." << std::endl;
+    std::cout << "[EHC-LLC] Initialized with " << TOTAL_BLOCKS << " HHT entries." << std::endl;
 }
 
 // Find a victim block based on Expected Hit Count (EHC) policy
