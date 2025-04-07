@@ -109,11 +109,13 @@ void srri::update_replacement_state(uint32_t triggering_cpu, long set, long way,
     auto& entry = rri_table[set][way];
     global_cycle++;
 
-    if (hit && entry.valid) {
+    if (hit) {
         uint64_t rri = way; // As requested
        // for (int i = HISTORY_LENGTH - 1; i > 0; --i)
          //   entry.rri_history[i] = entry.rri_history[i - 1];
         //entry.rri_history[0] = rri;
+         std::cout << "[SRRI-LLC] Got hit updating for " << way << " for way " << std::endl;
+
         entry.rri_history.back().push_back(way);
         entry.last_access_cycle = global_cycle;
     }
