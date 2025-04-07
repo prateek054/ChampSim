@@ -78,7 +78,7 @@ long srri::find_victim(uint32_t triggering_cpu, uint64_t instr_id, long set,
 
     for (long way = 0; way < NUM_WAY; ++way) {
         auto& entry = rri_table[set][way];
-        if (!entry.valid) return way; // Choose empty slot immediately
+        //if (!entry.valid) return way; // Choose empty slot immediately
 
         float predicted_rri = predict_rri(entry.rri_history);
         if (predicted_rri > max_predicted_rri) {
