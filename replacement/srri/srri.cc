@@ -74,7 +74,7 @@ long srri::find_victim(uint32_t triggering_cpu, uint64_t instr_id, long set,
     long victim = 0;
     float max_predicted_rri = -1.0f;
 
-    std::cout << "[SRRI-LLC] Finding victim for " << set << " and way " << way << " here" << std::endl;
+    std::cout << "[SRRI-LLC] Finding victim for " << set << " and way " << std::endl;
 
     for (long way = 0; way < NUM_WAY; ++way) {
         auto& entry = rri_table[set][way];
