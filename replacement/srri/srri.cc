@@ -95,12 +95,15 @@ void srri::replacement_cache_fill(uint32_t triggering_cpu, long set, long way, c
     auto& entry = rri_table[set][way];
     global_cycle++;
 
-    if (!entry.rri_history.empty()) {
+    /**if (!entry.rri_history.empty()) {
         entry.rri_history.back().push_back(0); // Appends 77 to the last row
 }   else {
         // If it's empty, you can choose to create the first row
         entry.rri_history.push_back({0});
     }
+
+    */
+    entry.rri_history.push_back({});
 }
 
 void srri::update_replacement_state(uint32_t triggering_cpu, long set, long way, champsim::address full_addr,
