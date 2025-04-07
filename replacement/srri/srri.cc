@@ -35,7 +35,7 @@ srri::srri(CACHE* cache)
 //  to calculate the average of the last 3 rows of a 2D vector and 
 // then get the average of those averages
 float srri::predict_rri(const std::vector<std::vector<uint64_t>>& rri_history) const {
-    int count = 3;
+    int count = 2;
     int size = rri_history.size();
     int start = size >= count ? size - count : 0;
 
