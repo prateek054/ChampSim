@@ -133,11 +133,15 @@ void srri::update_replacement_state(uint32_t triggering_cpu, long set, long way,
 
 int srri::find_rri_entry(champsim::address full_addr) 
 {
-    for (int i = 0; i < HHT_ENTRIES; i++) {
-        if (hit_rri_table[i].tag == full_addr) {
-            return i;
-        }
+    if (hit_rri_table.empty()) {
+        std::cout << "[SRRI-LLC] HHT is empty.\n";
+        return -1;
     }
 
+    for (size_t i = 0; i < hit_rri_table.size(); i++) {
+        if (hit_rri_table[i].tag == full_addr) {
+            return static_cast<int>(i);
+        }
+    }
     return -1;
 }
