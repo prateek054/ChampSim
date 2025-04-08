@@ -26,9 +26,12 @@ private:
         uint64_t last_access_cycle = 0;
     };
 
+   std::vector<RRIEntry> hit_rri_table;  // HHT now stores per-block data
+
    std::vector<std::vector<RRIEntry>> rri_table;  // Per-set RRI entries
    uint64_t global_cycle = 0;
    float predict_rri(const std::vector<std::vector<uint64_t>>& rri_history) const;
+   int find_rri_entry(champsim::address full_addr);
 
 public:
   explicit srri(CACHE* cache);

@@ -1,8 +1,9 @@
 {
   "ExpandedNodes": [
     "",
-    "\\replacement"
+    "\\replacement",
+    "\\replacement\\ehc"
   ],
-  "SelectedNode": "\\champsim_config.json",
+  "SelectedNode": "\\replacement\\ehc\\ehc.cc",
   "PreviewInSolutionExplorer": false
 }
