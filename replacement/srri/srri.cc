@@ -63,7 +63,7 @@ long srri::find_victim(uint32_t triggering_cpu, uint64_t instr_id, long set,
 
         std::cout << typeid(block_addr).name() << std::endl;
 
-        uint64_t addr_tag =block_addr.value();
+        uint64_t addr_tag = static_cast<uint64_t>(block_addr & ~0ULL);
 
         auto it = hit_rri_table.find(addr_tag);
         if (it != hit_rri_table.end()) {
