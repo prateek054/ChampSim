@@ -60,22 +60,24 @@ long srri::find_victim(uint32_t triggering_cpu, uint64_t instr_id, long set,
 
     for (long way = 0; way < NUM_WAY; ++way) {
         champsim::address block_addr = current_set[way].address;
-        int hht_index = find_rri_entry(block_addr);
 
-        if (hht_index != -1) {
-            RRIEntry& rri_entry = hit_rri_table[hht_index];
+        auto it = hit_rri_table.find(block_addr);
+        if (it != hit_rri_table.end()) {
+            RRIEntry& rri_entry = it->second;
             float predicted_rri = predict_rri(rri_entry.rri_history);
             std::cout << "[SRRI-LLC] Way " << way << ", Predicted RRI: " << predicted_rri << std::endl;
 
             if (predicted_rri > max_predicted_rri) {
                 max_predicted_rri = predicted_rri;
                 victim = way;
-            }
-        } else {
+                }
+        } 
+        else {
             std::cout << "[SRRI-LLC] Block address not found in HHT. Creating new entry.\n";
-            hit_rri_table.push_back({true, full_addr, {{0}}});
-        }
-    }
+            hit_rri_table[block_addr] = {true, block_addr, {{0}}};
+         }
+     }
+    
 
     std::cout << "[SRRI-LLC] Selected victim = Way " << victim << std::endl;
     return victim;
@@ -88,22 +90,15 @@ void srri::replacement_cache_fill(uint32_t triggering_cpu, long set, long way, c
     global_cycle++;
     std::cout << "[SRRI-LLC] Cache fill at set " << set << ", way " << way << std::endl;
 
-    int hht_index = find_rri_entry(full_addr);
+    auto& rri_entry = hit_rri_table[full_addr];  // Will create if not exists
 
-    if (hht_index != -1) {
-        RRIEntry& rri_entry = hit_rri_table[hht_index];
-
-        if (rri_entry.rri_history.empty() || !rri_entry.rri_history.back().empty()) {
-            std::cout << "[SRRI-LLC] Appending new empty row to rri_history\n";
-            rri_entry.rri_history.push_back({});
-        }
-
-        std::cout << "[SRRI-LLC] Appending 0 to the last row\n";
-        rri_entry.rri_history.back().push_back(0);
-    } else {
-        std::cout << "[SRRI-LLC] Creating new HHT entry for address\n";
-        hit_rri_table.push_back({true, full_addr, {{0}}});
+    if (rri_entry.rri_history.empty() || !rri_entry.rri_history.back().empty()) {
+        std::cout << "[SRRI-LLC] Appending new empty row to rri_history\n";
+        rri_entry.rri_history.push_back({});
     }
+
+    std::cout << "[SRRI-LLC] Appending 0 to the last row\n";
+    rri_entry.rri_history.back().push_back(0);
 }
 
 void srri::update_replacement_state(uint32_t triggering_cpu, long set, long way, champsim::address full_addr,
@@ -115,10 +110,10 @@ void srri::update_replacement_state(uint32_t triggering_cpu, long set, long way,
     if (hit) {
         std::cout << "[SRRI-LLC] Hit update at set " << set << ", way " << way << std::endl;
 
-        int hht_index = find_rri_entry(full_addr);
+         auto it = hit_rri_table.find(full_addr);
 
-        if (hht_index != -1) {
-            RRIEntry& rri_entry = hit_rri_table[hht_index];
+        if (it != hit_rri_table.end()) {
+            RRIEntry& rri_entry = it->second;
 
             if (!rri_entry.rri_history.empty()) {
                 std::cout << "[SRRI-LLC] Appending RRI (" << way << ") to last row\n";
@@ -131,7 +126,7 @@ void srri::update_replacement_state(uint32_t triggering_cpu, long set, long way,
     }
 }
 
-int srri::find_rri_entry(champsim::address full_addr) 
+/*int srri::find_rri_entry(champsim::address full_addr) 
 {
     if (hit_rri_table.empty()) {
         std::cout << "[SRRI-LLC] HHT is empty.\n";
@@ -145,3 +140,4 @@ int srri::find_rri_entry(champsim::address full_addr)
     }
     return -1;
 }
+*/
