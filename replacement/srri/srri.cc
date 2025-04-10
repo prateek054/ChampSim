@@ -61,7 +61,9 @@ long srri::find_victim(uint32_t triggering_cpu, uint64_t instr_id, long set,
     for (long way = 0; way < NUM_WAY; ++way) {
         champsim::address block_addr = current_set[way].address;
 
-        uint64_t addr_tag = static_cast<uint64_t>(block_addr);
+        std::cout << typeid(block_addr).name() << std::endl;
+
+        uint64_t addr_tag =block_addr.value();
 
         auto it = hit_rri_table.find(addr_tag);
         if (it != hit_rri_table.end()) {
@@ -76,7 +78,7 @@ long srri::find_victim(uint32_t triggering_cpu, uint64_t instr_id, long set,
         } 
         else {
             std::cout << "[SRRI-LLC] Block address not found in HHT. Creating new entry.\n";
-            hit_rri_table[block_addr] = {true, block_addr, {{0}}};
+            hit_rri_table[addr_tag] = {true, addr_tag, {{0}}};
          }
      }
     
