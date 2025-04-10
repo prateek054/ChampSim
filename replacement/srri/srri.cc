@@ -13,8 +13,8 @@ srri::srri(CACHE* cache)
 }
 
 float srri::predict_rri(const std::vector<std::vector<uint64_t>>& rri_history) const {
-    std::cout << "[SRRI-LLC] Predicting RRI..." << std::endl;
-    std::cout << "[SRRI-LLC] rri_history has " << rri_history.size() << " rows." << std::endl;
+   // std::cout << "[SRRI-LLC] Predicting RRI..." << std::endl;
+   // std::cout << "[SRRI-LLC] rri_history has " << rri_history.size() << " rows." << std::endl;
 
     for (size_t i = 0; i < rri_history.size(); ++i) {
         std::cout << "[SRRI-LLC] Row " << i << ": ";
@@ -44,7 +44,7 @@ float srri::predict_rri(const std::vector<std::vector<uint64_t>>& rri_history) c
     }
 
     double final_avg = std::accumulate(row_averages.begin(), row_averages.end(), 0.0) / row_averages.size();
-    std::cout << "[SRRI-LLC] Final predicted RRI = " << final_avg << std::endl;
+    //std::cout << "[SRRI-LLC] Final predicted RRI = " << final_avg << std::endl;
 
     return static_cast<float>(final_avg);
 }
@@ -69,7 +69,7 @@ long srri::find_victim(uint32_t triggering_cpu, uint64_t instr_id, long set,
         if (it != hit_rri_table.end()) {
             RRIEntry& rri_entry = it->second;
             float predicted_rri = predict_rri(rri_entry.rri_history);
-            std::cout << "[SRRI-LLC] Way " << way << ", Predicted RRI: " << predicted_rri << std::endl;
+            //std::cout << "[SRRI-LLC] Way " << way << ", Predicted RRI: " << predicted_rri << std::endl;
 
             if (predicted_rri > max_predicted_rri) {
                 max_predicted_rri = predicted_rri;
@@ -92,20 +92,20 @@ void srri::replacement_cache_fill(uint32_t triggering_cpu, long set, long way, c
 {
     auto& entry = rri_table[set][way];
     global_cycle++;
-    std::cout << "[SRRI-LLC] Cache fill at set " << set << ", way " << way << std::endl;
+    //std::cout << "[SRRI-LLC] Cache fill at set " << set << ", way " << way << std::endl;
 
     //uint64_t addr_tag = static_cast<uint64_t>(full_addr);
 
     auto it = hit_rri_table.find(full_addr);
     if (it == hit_rri_table.end()) {
-        std::cout << "[SRRI-LLC] Creating new HHT entry for address\n";
+       // std::cout << "[SRRI-LLC] Creating new HHT entry for address\n";
         hit_rri_table[full_addr] = {true, full_addr, {{0}}};  // init with a default row
     }else {
 
          // Now safe to access it
         auto& rri_entry = hit_rri_table[full_addr];
         if (rri_entry.rri_history.empty() || !rri_entry.rri_history.back().empty()) {
-            std::cout << "[SRRI-LLC] Appending new empty row to rri_history\n";
+         //   std::cout << "[SRRI-LLC] Appending new empty row to rri_history\n";
             rri_entry.rri_history.push_back({0});
         }
     } 
@@ -118,7 +118,7 @@ void srri::update_replacement_state(uint32_t triggering_cpu, long set, long way,
     global_cycle++;
 
     if (hit) {
-        std::cout << "[SRRI-LLC] Hit update at set " << set << ", way " << way << std::endl;
+        //std::cout << "[SRRI-LLC] Hit update at set " << set << ", way " << way << std::endl;
 
         //uint64_t addr_tag = static_cast<uint64_t>(full_addr);
          auto it = hit_rri_table.find(full_addr);
