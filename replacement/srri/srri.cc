@@ -16,13 +16,13 @@ float srri::predict_rri(const std::vector<std::vector<uint64_t>>& rri_history) c
    // std::cout << "[SRRI-LLC] Predicting RRI..." << std::endl;
    // std::cout << "[SRRI-LLC] rri_history has " << rri_history.size() << " rows." << std::endl;
 
-    for (size_t i = 0; i < rri_history.size(); ++i) {
+   /* for (size_t i = 0; i < rri_history.size(); ++i) {
         std::cout << "[SRRI-LLC] Row " << i << ": ";
         for (auto val : rri_history[i]) {
             std::cout << val << " ";
         }
         std::cout << "\n";
-    }
+    } */
 
     int count = 2;
     int size = rri_history.size();
@@ -56,7 +56,7 @@ long srri::find_victim(uint32_t triggering_cpu, uint64_t instr_id, long set,
     long victim = 0;
     float max_predicted_rri = -1.0f;
 
-    std::cout << "[SRRI-LLC] Finding victim for set " << set << std::endl;
+    //std::cout << "[SRRI-LLC] Finding victim for set " << set << std::endl;
 
     for (long way = 0; way < NUM_WAY; ++way) {
         champsim::address block_addr = current_set[way].address;
@@ -127,10 +127,10 @@ void srri::update_replacement_state(uint32_t triggering_cpu, long set, long way,
             RRIEntry& rri_entry = it->second;
 
             if (!rri_entry.rri_history.empty()) {
-                std::cout << "[SRRI-LLC] Appending RRI (" << way << ") to last row\n";
+                // std::cout << "[SRRI-LLC] Appending RRI (" << way << " for block " << full_addr <<  ") to last row\n";
                 rri_entry.rri_history.back().push_back(way);
             } else {
-                std::cout << "[SRRI-LLC] Warning: trying to append to empty history. Creating new row.\n";
+                // std::cout << "[SRRI-LLC] Warning: trying to append to empty history. Creating new row.\n";
                 rri_entry.rri_history.push_back({way});
             }
         }
