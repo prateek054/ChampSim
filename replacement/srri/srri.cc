@@ -77,13 +77,13 @@ long srri::find_victim(uint32_t triggering_cpu, uint64_t instr_id, long set,
                 }
         } 
         else {
-            std::cout << "[SRRI-LLC] Block address not found in HHT. Creating new entry.\n";
+           // std::cout << "[SRRI-LLC] Block address not found in HHT. Creating new entry.\n";
             hit_rri_table[block_addr] = {true, block_addr, {{0}}};
          }
      }
     
 
-    std::cout << "[SRRI-LLC] Selected victim = Way " << victim << std::endl;
+   // std::cout << "[SRRI-LLC] Selected victim = Way " << victim << std::endl;
     return victim;
 }
 
