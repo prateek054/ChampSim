@@ -3,7 +3,7 @@
 
 #include <vector>
 #include <array>
-#include <unordered_map>
+#include <map>
 #include "cache.h"
 #include "modules.h"
 
@@ -27,7 +27,7 @@ private:
         uint64_t last_access_cycle = 0;
     };
 
-   std::unordered_map<uint64_t, RRIEntry> hit_rri_table;  // HHT now stores per-block data
+   std::map<champsim::address, RRIEntry> hit_rri_table;  // HHT now stores per-block data
 
    std::vector<std::vector<RRIEntry>> rri_table;  // Per-set RRI entries
    uint64_t global_cycle = 0;
