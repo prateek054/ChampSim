@@ -78,7 +78,7 @@ long srri::find_victim(uint32_t triggering_cpu, uint64_t instr_id, long set,
         } 
         else {
             std::cout << "[SRRI-LLC] Block address not found in HHT. Creating new entry.\n";
-            hit_rri_table[addr_tag] = {true, addr_tag, {{0}}};
+            hit_rri_table[block_addr] = {true, block_addr, {0}};
          }
      }
     
@@ -94,9 +94,9 @@ void srri::replacement_cache_fill(uint32_t triggering_cpu, long set, long way, c
     global_cycle++;
     std::cout << "[SRRI-LLC] Cache fill at set " << set << ", way " << way << std::endl;
 
-    uint64_t addr_tag = static_cast<uint64_t>(full_addr);
+    //uint64_t addr_tag = static_cast<uint64_t>(full_addr);
 
-    auto& rri_entry = hit_rri_table[addr_tag];  // Will create if not exists
+    auto& rri_entry = hit_rri_table[full_addr];  // Will create if not exists
 
     if (rri_entry.rri_history.empty() || !rri_entry.rri_history.back().empty()) {
         std::cout << "[SRRI-LLC] Appending new empty row to rri_history\n";
@@ -116,8 +116,8 @@ void srri::update_replacement_state(uint32_t triggering_cpu, long set, long way,
     if (hit) {
         std::cout << "[SRRI-LLC] Hit update at set " << set << ", way " << way << std::endl;
 
-        uint64_t addr_tag = static_cast<uint64_t>(full_addr);
-         auto it = hit_rri_table.find(addr_tag);
+        //uint64_t addr_tag = static_cast<uint64_t>(full_addr);
+         auto it = hit_rri_table.find(full_addr);
 
         if (it != hit_rri_table.end()) {
             RRIEntry& rri_entry = it->second;
