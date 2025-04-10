@@ -61,7 +61,7 @@ long srri::find_victim(uint32_t triggering_cpu, uint64_t instr_id, long set,
     for (long way = 0; way < NUM_WAY; ++way) {
         champsim::address block_addr = current_set[way].address;
 
-        std::cout << typeid(block_addr).name() << std::endl;
+       // std::cout << typeid(block_addr).name() << std::endl;
 
        // uint64_t addr_tag = static_cast<uint64_t>(block_addr & ~0ULL);
 
