@@ -56,6 +56,8 @@ long srri::find_victim(uint32_t triggering_cpu, uint64_t instr_id, long set,
     long victim = 0;
     float max_predicted_rri = -1.0f;
 
+    float predicted_rri = 0.0f;
+
     //std::cout << "[SRRI-LLC] Finding victim for set " << set << std::endl;
 
     for (long way = 0; way < NUM_WAY; ++way) {
@@ -71,6 +73,10 @@ long srri::find_victim(uint32_t triggering_cpu, uint64_t instr_id, long set,
             float predicted_rri = predict_rri(rri_entry.rri_history);
             //std::cout << "[SRRI-LLC] Way " << way << ", Predicted RRI: " << predicted_rri << std::endl;
 
+            if (predicted_rri == 0.0f) {
+                static_cast<float>(global_cycle - rri_entry.last_access_cycle);
+            }
+
             if (predicted_rri > max_predicted_rri) {
                 max_predicted_rri = predicted_rri;
                 victim = way;
@@ -78,7 +84,7 @@ long srri::find_victim(uint32_t triggering_cpu, uint64_t instr_id, long set,
         } 
         else {
            // std::cout << "[SRRI-LLC] Block address not found in HHT. Creating new entry.\n";
-            hit_rri_table[block_addr] = {true, block_addr, {{0}}};
+            hit_rri_table[block_addr] = {true, block_addr, {{0}}, global_cycle++};
          }
      }
     
@@ -99,7 +105,7 @@ void srri::replacement_cache_fill(uint32_t triggering_cpu, long set, long way, c
     auto it = hit_rri_table.find(full_addr);
     if (it == hit_rri_table.end()) {
        // std::cout << "[SRRI-LLC] Creating new HHT entry for address\n";
-        hit_rri_table[full_addr] = {true, full_addr, {{0}}};  // init with a default row
+        hit_rri_table[full_addr] = {true, full_addr, {{0}}, global_cycle};  // init with a default row
     }else {
 
          // Now safe to access it
@@ -126,12 +132,15 @@ void srri::update_replacement_state(uint32_t triggering_cpu, long set, long way,
         if (it != hit_rri_table.end()) {
             RRIEntry& rri_entry = it->second;
 
+            uint64_t accessedAfter = global_cycle - rri_entry.last_access_cycle;
+            rri_entry.last_access_cycle = global_cycle;
+
             if (!rri_entry.rri_history.empty()) {
                 // std::cout << "[SRRI-LLC] Appending RRI (" << way << " for block " << full_addr <<  ") to last row\n";
-                rri_entry.rri_history.back().push_back(way);
+                rri_entry.rri_history.back().push_back(accessedAfter);
             } else {
                 // std::cout << "[SRRI-LLC] Warning: trying to append to empty history. Creating new row.\n";
-                rri_entry.rri_history.push_back({way});
+                rri_entry.rri_history.push_back({accessedAfter});
             }
         }
     }
